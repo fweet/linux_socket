@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#define PORT_SERV 8888
+#define BUFF_LEN 256
+
+int main(int argc,char*argv[])
+{
+  int s;
+  struct sockaddr_in addr_serv;
+  s = socket(AF_INET,SOCK_DGRAM,0);
+  memset(&addr_serv,0,sizeof(addr_serv));
+  addr_serv.sin_family = AF_INET;
+  addr_serv.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr_serv.sin_port = htons(PORT_SERV);
+  char send_buff[BUFF_LEN];
+  char recv_buff[BUFF_LEN];
+  socklen_t len;
+  while(1)
+ {
+    int n;
+    len = sizeof(struct sockaddr);
+    printf("Client:");
+    gets(send_buff);
+    if(sendto(s,send_buff,strlen(send_buff),0,(struct sockaddr*)&addr_serv,sizeof(addr_serv))<0)
+  {
+      perror("send error:");
+      continue;
+   }
+    if(strcmp(send_buff,"exit")==0)
+  {
+      close(s);
+      return 0;
+   }
+memset(&send_buff,0,BUFF_LEN);
+    if((n = recvfrom(s,recv_buff,BUFF_LEN,0,(struct sockaddr*)&addr_serv,&len))<0)
+  {
+      perror("recv error:");
+      continue;
+
+   }
+    else
+   {
+     recv_buff[n] = '\0';
+     printf("Server: %s\n",recv_buff);
+    }
+memset(&recv_buff,0,BUFF_LEN);
+ }
+close(s);
+return 0;
+}
